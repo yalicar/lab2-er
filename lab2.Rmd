@@ -14,7 +14,8 @@ class(df)
 
 ```{r}
 library(dplyr)
-df %>% group_by(mnth) %>% summarise(cnt = sum(cnt)) %>% top_n(1,cnt)
+paste("El mes que tiende mayor demanda es el mes #",(df %>% group_by(mnth) %>% summarise(cnt = sum(cnt)) %>% top_n(1,cnt))$mnth, "con",(df %>% group_by(mnth) %>% summarise(cnt = sum(cnt)) %>% top_n(1,cnt))$cnt,"alquileres" )
+
 ```
 ## 2. ¿Qué rango de hora es la de mayor demanda?
 ```{r}
@@ -57,12 +58,24 @@ ggplot(df_t, aes(x=hum, y=cnt )) +
   geom_hline(yintercept = mean(df_t$cnt),size = 1) +
   geom_text(aes(0,mean(cnt) ,label = "Media =", vjust = -1)) +
   geom_text(aes(0.16,mean(cnt) ,label = mean(cnt), vjust = -1)) +
-  theme_minimal()
+  theme_minimal()+xlab("Humedad")
 ```
 ```{r}
 paste("Valor minimo de temperaratura a partir de donde baja la demanda con respecto a la media es",min(filter(df_t, cnt>= mean(df_t$cnt))$hum) )
 ```
 Para este caso analizando la demanda en base a la humedad se obserba que en humedades altas no hay una tendencia ya que la demada sube y baja pero lleva una tendencia a bajar aproxiadamente  desde los 0.6 , sin embargo se ve una tendendia bien defiida que la demanda baja cuando la humedad bada de 0.33.
+
+## 6. ¿Que condiciones climáticas serian ideales para nuestra demanda?(considere una función de densidad bivariable)
+
+```{r}
+
+plot(density((subset(df, season==1))$cnt),col="green",main="Densidades segun estacion")
+lines(density((subset(df, season==2))$cnt),col="orange")
+lines(density((subset(df, season==3))$cnt),col="brown")
+lines(density((subset(df, season==4))$cnt),col="blue")
+```
+Las condiciones climaticas ideales para nuestra demanda es en primavera.
+
 
 ## 7. Mueste una gráfica de la densidad de rentas.
 ```{r}
@@ -74,19 +87,78 @@ plot(density(df$cnt))
 ```{r}
 paste("Proedio de personas que rentan bicicletas y estan registradas es",mean(df$registered))
 ```
-Promedio de renta de bicicletas por temporada.
+### Promedio de renta de bicicletas por temporada.
 ```{r}
 df %>%
   group_by(season) %>%
-  summarise_at(vars(registered), list(name = mean))
+  summarise_at(vars(registered), list(registered = mean))
+```
+## 9. Determine la mediana de personas que rentan bicicletas y no están registradas.
+
+```{r}
+paste(" La mediana de las personas que no estan resgistradas y rentan bicicletas es:",median(df$casual))
+```
+## 10. Deterimne la renta total, renta promedio por cada tipo de condición climática.
+Reta Total por condicion climatica
+```{r}
+df %>% group_by(weathersit) %>% summarise(cnt = sum(cnt))
+```
+Renta promedio por condicion climatica
+```{r}
+df %>%
+  group_by(weathersit) %>%
+  summarise_at(vars(cnt), list(cnt = mean))
 ```
 
+## 11. Determine y muestre una gráfica de barras de cada renta por tipo de temporada.
 
+```{r}
+library(ggplot2)
 
+ggplot(data=df %>% group_by(season) %>% summarise(registered = sum(registered)), aes(x=season, y=registered)) +
+  ggtitle("Plot of Registered Cliente vs Season ")+
+  geom_bar(stat="identity", width = 0.5, fill="steelblue")+
+  geom_point( size=2, shape=21, fill="white", colour="red") +
+  theme_minimal()
+```
+```{r}
+ggplot(data=df %>% group_by(season) %>% summarise(registered = sum(casual)), aes(x=season, y=registered)) +
+  ggtitle("Plot of Casual Cliente vs Season ")+
+  geom_bar(stat="identity", width = 0.5, fill="steelblue")+
+  geom_point( size=2, shape=21, fill="white", colour="red") +
+  theme_minimal()
+```
 
+## 12. Muestre una gráfica de la densidad por hora.
+```{r}
+plot(density(df$hr))
+```
+## 13. Muestre una gráfica de barras por día del mes como eje x y la cantidad total de alquileres como el eje Y.
 
+```{r}
+library(dplyr)
+df<- mutate(df,dtedaymth=day(df$dteday))
+df %>% group_by(dtedaymth) %>% summarise(cnt = sum(cnt))
+ggplot(data=df %>% group_by(dtedaymth) %>% summarise(cnt = sum(cnt)), aes(x=dtedaymth, y=cnt)) +
+  ggtitle("Plot dia del mes vs rentas ")+
+  geom_bar(stat="identity", width = 0.5, fill="steelblue")+
+  theme_minimal() +xlab("Fecha")+ylab("Alquiler")
+```
+## 14. Muestre una serie temporal (gráfica) con el tiempo (mes-dia-año) como eje de tiempo y la cantidad de alquieleres como ejer Y.
 
+```{r}
+library(ggplot2)
+library(dplyr)
 
+ggplot(data=df %>% group_by(dteday) %>% summarise(cnt = sum(cnt)), aes(x =as.Date(dteday), y = cnt,group=1)) +
+  geom_line() + scale_x_date(limits = as.Date(c("2011-01-01","2012-12-31")))+ xlab("Fecha")+ ylab("Alquiler") + ggtitle("Grafica Tiempo vs Alquiler")
+
+```
+## 15. Muestre una gráfica de puntos que relaciones la temperatura como ejer X y la humedad como eje Y.
+
+```{r}
+plot(df$temp~df$hum,main="Relacion Temperatura vs Humedad",xlab="Humedad",ylab="Temperatura")
+```
 
 
 

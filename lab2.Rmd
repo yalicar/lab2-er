@@ -131,7 +131,7 @@ ggplot(data=df %>% group_by(season) %>% summarise(registered = sum(casual)), aes
 
 ## 12. Muestre una gráfica de la densidad por hora.
 ```{r}
-plot(density(df$hr))
+plot(density(df$hr),main="Funcion de densidad por hora")
 ```
 ## 13. Muestre una gráfica de barras por día del mes como eje x y la cantidad total de alquileres como el eje Y.
 

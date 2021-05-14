@@ -1,0 +1,99 @@
+---
+title: "Dpylr y ggplot"
+output: html_notebook
+---
+
+```{r}
+
+df <- as.data.frame(read.csv(file = "./hour.csv"))
+class(df)
+```
+
+# Preguntas:
+## 1. ¿Qué mes es el que tiene la mayor demanda?
+
+```{r}
+library(dplyr)
+df %>% group_by(mnth) %>% summarise(cnt = sum(cnt)) %>% top_n(1,cnt)
+```
+## 2. ¿Qué rango de hora es la de mayor demanda?
+```{r}
+df %>% group_by(group = cut(hr, breaks = seq(0, max(hr), 2))) %>% summarise(cnt = sum(cnt)) %>% top_n(1,cnt)
+```
+## 3. ¿Qué temporada es la mas alta?
+```{r}
+df %>% group_by(season) %>% summarise(cnt = sum(cnt)) %>% top_n(1,cnt)
+```
+## 4. ¿A que temperatura baja la demanda?
+```{r}
+df_t=df %>% group_by(temp) %>% summarise(cnt = sum(cnt))
+mean(df_t$cnt) ## Calculo de la media.
+```
+```{r}
+library(ggplot2)
+ggplot(df_t, aes(x=temp, y=cnt )) + 
+  geom_line(colour="red")  + 
+  geom_point( size=2, shape=21, fill="white", colour="red") + 
+  geom_hline(yintercept = mean(df_t$cnt),size = 1) +
+  geom_text(aes(0,mean(cnt) ,label = "Media =", vjust = -1)) +
+  geom_text(aes(0.12,mean(cnt) ,label = mean(cnt), vjust = -1)) +
+  theme_minimal()
+```
+```{r}
+paste("Valor minimo de temperaratura a partir de donde baja la demanda es",min(filter(df_t, cnt >= mean(df_t$cnt))$temp) )
+paste("Valor maximo de temperaratura a partir de donde baja la demanda es",max(filter(df_t, cnt >= mean(df_t$cnt))$temp) )
+```
+Debido a que no hay un valor de referencia especifico para decir que la demana baja o sube se considero la media como punto de referencia , con lo que podemos decir que la demanda baja de la media con temperaturas inferiores a 0.30 y superiores a 0.82.
+
+## 5. ¿A que humedad baja la demanda?
+```{r}
+df_t=df %>% group_by(hum) %>% summarise(cnt = sum(cnt))
+mean(df_t$cnt) ## Calculo de la media.
+```
+```{r}
+ggplot(df_t, aes(x=hum, y=cnt )) + 
+  geom_line(colour="red")  + 
+  geom_point( size=2, shape=21, fill="white", colour="red") + 
+  geom_hline(yintercept = mean(df_t$cnt),size = 1) +
+  geom_text(aes(0,mean(cnt) ,label = "Media =", vjust = -1)) +
+  geom_text(aes(0.16,mean(cnt) ,label = mean(cnt), vjust = -1)) +
+  theme_minimal()
+```
+```{r}
+paste("Valor minimo de temperaratura a partir de donde baja la demanda con respecto a la media es",min(filter(df_t, cnt>= mean(df_t$cnt))$hum) )
+```
+Para este caso analizando la demanda en base a la humedad se obserba que en humedades altas no hay una tendencia ya que la demada sube y baja pero lleva una tendencia a bajar aproxiadamente  desde los 0.6 , sin embargo se ve una tendendia bien defiida que la demanda baja cuando la humedad bada de 0.33.
+
+## 7. Mueste una gráfica de la densidad de rentas.
+```{r}
+plot(density(df$cnt))
+
+```
+
+## 8. Determine promedio de personas que rentan bicicletas y están registradas.
+```{r}
+paste("Proedio de personas que rentan bicicletas y estan registradas es",mean(df$registered))
+```
+Promedio de renta de bicicletas por temporada.
+```{r}
+df %>%
+  group_by(season) %>%
+  summarise_at(vars(registered), list(name = mean))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
